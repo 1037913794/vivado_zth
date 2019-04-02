@@ -5,14 +5,14 @@ module clk_div( input clk,
                 output Clk_CPU
               );
 
-// Clock divider-ʱ�ӷ�Ƶ��
+// Clock divider-ʱ�ӷ�Ƶ��
 
   reg[31:0]clkdiv;
 
   always @ (posedge clk or posedge rst) begin 
     if (rst) clkdiv <= 0; else clkdiv <= clkdiv + 1'b1; end
-
-  assign Clk_CPU=(SW15)? clkdiv[8] : clkdiv[1];
+//������ã���clkdivΪ0������ÿ��ʱ������clkdiv����
+  assign Clk_CPU=(SW15)? clkdiv[23] : clkdiv[15];
 //assign Clk_CPU= clkdiv[8]; 
-
+//��sw15Ϊ1����ʱ���źŷ���128��
 endmodule

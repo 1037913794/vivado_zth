@@ -1,11 +1,11 @@
 //`timescale 1ns / 1ps
 module seg7x16(
     input clk,
-	 input reset,
+	input reset,
 	// input cs,
-	 input [31:0] i_data,
-	 output  [7:0] o_seg,
-	 output  [7:0] o_sel
+	input [31:0] i_data,//输入的数据
+	output  [7:0] o_seg,//显示的数码管（改变速度比时钟信号慢2^15倍）
+	output  [7:0] o_sel //显示的数码管编号
     );
 
     reg [14:0] cnt;
@@ -14,9 +14,9 @@ module seg7x16(
         cnt <= 0;
       else
         cnt <= cnt + 1'b1;
- 
+ //每个时钟信号cnt计数器自增
     wire seg7_clk = cnt[14]; 
-	 
+	 //选择器时钟，放慢了2^15倍
 	 reg [2:0] seg7_addr;
 	 
 	 always @ (posedge seg7_clk, posedge reset)
