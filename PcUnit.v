@@ -17,7 +17,7 @@ module PcUnit(PC,PcReSet,PcSel,Adress,Jump,Jumpaddr,clk,pause);
 			PC <= 32'h0000_0000;
 		else
             begin
-                if((PC < 32'h0000_006c) && (pause == 0))
+                if((PC <= 32'h0000_006c) && (pause == 0))
                     PC = PC+4;
                 if(PcSel == 1)
                     begin

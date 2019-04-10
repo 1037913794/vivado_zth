@@ -1,5 +1,5 @@
-module Mips(clk,cpu_resetn,sw_i,led_o,o_seg,o_sel);
-    input   clk,cpu_resetn;
+module Mips(Clk,rstn,sw_i,led_o,o_seg,o_sel);
+    input   Clk,rstn;
     input   [15:0]  sw_i;
     output  [7:0]   o_seg,o_sel;
     output reg [15:0]  led_o;
@@ -41,7 +41,8 @@ module Mips(clk,cpu_resetn,sw_i,led_o,o_seg,o_sel);
     wire        divided_clk;                        //分频后的信号
     reg  [31:0] disp_data;
     wire        Reset;
-    assign Reset = ~cpu_resetn;
+    wire [31:0] disp_mem;
+    assign Reset = ~rstn;
     assign pcSel = ((Branch&&zero)==1)?1:0;
     assign imAdr = pcOut[9:2];
     assign jumpaddr = opCode[25:0];
@@ -85,31 +86,31 @@ module Mips(clk,cpu_resetn,sw_i,led_o,o_seg,o_sel);
             led_o = sw_i;
         if(sw_i[13])
             case(sw_i[11:8])
-                0 : assign disp_data = (RegW)?gprDataIn:((MemW)?gprDataOut2:pcOut);
-                1 : assign disp_data = U_DMem.DMem[sw_i[7:0]];
-                2 : assign disp_data = pcOut;
-                3 : assign disp_data = opCode;
-                4 : assign disp_data = gprDataOut1;
-                5 : assign disp_data = gprDataOut2;
-                6 : assign disp_data = gprDataIn;
-                7 : assign disp_data = {27'd0,gprReSel1};
-                8 : assign disp_data = {27'd0,gprReSel2};
-                9 : assign disp_data = {27'd0,gprWeSel};
-                10: assign disp_data = {16'd0,extDataIn};
-                11: assign disp_data = extDataOut;
-                12: assign disp_data = gprDataOut1;
-                13: assign disp_data = aluDataIn2;
-                14: assign disp_data = aluDataOut;
-                15: assign disp_data = dmDataOut;
+                0 : disp_data = (RegW)?gprDataIn:((MemW)?gprDataOut2:pcOut);
+                1 : disp_data = disp_mem;
+                2 : disp_data = pcOut;
+                3 : disp_data = opCode;
+                4 : disp_data = gprDataOut1;
+                5 : disp_data = gprDataOut2;
+                6 : disp_data = gprDataIn;
+                7 : disp_data = {27'd0,gprReSel1};
+                8 : disp_data = {27'd0,gprReSel2};
+                9 : disp_data = {27'd0,gprWeSel};
+                10: disp_data = {16'd0,extDataIn};
+                11: disp_data = extDataOut;
+                12: disp_data = gprDataOut1;
+                13: disp_data = aluDataIn2;
+                14: disp_data = aluDataOut;
+                15: disp_data = dmDataOut;
             endcase
         else
-            assign disp_data = (RegW)?gprDataIn:((MemW)?gprDataOut2:pcOut);
+            disp_data = (RegW)?gprDataIn:((MemW)?gprDataOut2:pcOut);
     end
-    clk_div U_clk_div(.clk(clk),.rst(Reset),.SW15(sw_i[15]),.clk_CPU(divided_clk));
+    clk_div U_clk_div(.clk(Clk),.rst(Reset),.SW15(sw_i[15]),.Clk_CPU(divided_clk));
     PcUnit U_pcUnit(.PC(pcOut),.PcReSet(Reset),.PcSel(pcSel),.Adress(extDataOut),.Jump(jump),.Jumpaddr(jumpaddr)
                     ,.clk(divided_clk),.pause(sw_i[14]));
     IMem U_IMem(.a(imAdr),.spo(opCode));
-    seg7x16 U_seg7x16(.clk(clk),.reset(Reset),.i_data(disp_data),.o_seg(o_seg),.o_sel(o_sel));
+    seg7x16 U_seg7x16(.clk(Clk),.reset(Reset),.i_data(disp_data),.o_seg(o_seg),.o_sel(o_sel));
     GPR U_gpr(.DataOut1(gprDataOut1),.DataOut2(gprDataOut2),.clk(divided_clk),.WData(gprDataIn)
               ,.WE(RegW),.WeSel(gprWeSel),.ReSel1(gprReSel1),.ReSel2(gprReSel2));
     Ctrl U_Ctrl(.jump(jump),.RegDst(RegDst),.Branch(Branch),.MemR(MemR),.Mem2R(Mem2R)
@@ -117,5 +118,5 @@ module Mips(clk,cpu_resetn,sw_i,led_o,o_seg,o_sel);
                 ,.OpCode(op),.funct(funct));
     Extender U_extend(.ExtOut(extDataOut),.DataIn(extDataIn),.ExtOp(ExtOp));
     Alu U_Alu(.AluResult(aluDataOut),.Zero(zero),.DataIn1(gprDataOut1),.DataIn2(aluDataIn2),.Shamt(opCode[10:6]),.AluCtrl(Aluctrl));
-    DMem U_DMem(.DataOut(dmDataOut),.DataAdr(dmDataAdr),.DataIn(gprDataOut2),.DMemW(MemW),.DMemR(MemR),.clk(divided_clk));
+    DMem U_DMem(.DataOut(dmDataOut),.DataAdr(dmDataAdr),.DataIn(gprDataOut2),.DMemW(MemW),.DMemR(MemR),.clk(divided_clk),.sel(sw_i[7:0]),.disp(disp_mem));
 endmodule
